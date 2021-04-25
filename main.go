@@ -2,18 +2,13 @@ package main
 
 import "fmt"
 
-func canIDrink(age int) bool {
-	switch koreanAge := age + 2; koreanAge {
-	case 10:
-		return false
-	case 18:
-		return true
-	}
-	return false
-}
-
 func main() {
-	fmt.Println(canIDrink(16))
-	fmt.Println(canIDrink(17))
-	fmt.Println(canIDrink(18))
+	a := 2
+	b := &a	// a의 메모리 주소
+
+	a = 5;
+	fmt.Println(*b)
+	
+	*b = 10 // *b 메모리 주소가 가르키는 값
+	fmt.Println(a)
 }
