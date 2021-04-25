@@ -3,10 +3,13 @@ package main
 import "fmt"
 
 func canIDrink(age int) bool {
-	if koreanAge := age + 2; koreanAge < 19 {
+	switch koreanAge := age + 2; koreanAge {
+	case 10:
 		return false
-	} 
-	return true
+	case 18:
+		return true
+	}
+	return false
 }
 
 func main() {
