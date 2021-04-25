@@ -1,19 +1,26 @@
 package main
 
-import (
-	"fmt"
-	"strings"
-)
+import "fmt"
 
-func lenAndUpper (name string) (length int, uppercase string) {
-	defer fmt.Println("I'm done") // return 이후 실행
-	length = len(name)
-	uppercase = strings.ToUpper(name)
-	return
+func superAdd(numbers ...int) int{
+	sumNum := 0
+	for _, number:= range numbers {
+		sumNum += number
+	}
+	return sumNum
 }
 
+func greatAdd(numbers ...int) int {
+	sumNum := 0
+	for i := 0; i < len(numbers); i++ {
+		sumNum += numbers[i]
+	}
+	return sumNum
+}
 
 func main() {
-	totalLength, uppercase := lenAndUpper("jinwook")
-	fmt.Println(totalLength, uppercase)
+	sum1 := superAdd(1214,421,41,412,12)
+	sum2 := greatAdd(1,2,3,1231414,5,6)
+
+	fmt.Println(sum1, sum2)
 }
