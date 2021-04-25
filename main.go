@@ -3,12 +3,8 @@ package main
 import "fmt"
 
 func main() {
-	a := 2
-	b := &a	// a의 메모리 주소
-
-	a = 5;
-	fmt.Println(*b)
-	
-	*b = 10 // *b 메모리 주소가 가르키는 값
-	fmt.Println(a)
+	names := []string{"nico","lynn","jinwook"}
+	// array를 return하지 않으므로 값을 할당해야 함
+	names = append(names, "golang") 
+	fmt.Println(names)
 }
