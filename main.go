@@ -2,32 +2,48 @@ package main
 
 import (
 	"fmt"
-	"time"
+	"net/http"
 )
 
+type requestResult struct {
+	url string
+	status int
+}
+
 func main() {
-	// create channel
-	channel := make(chan string)
-	people := [2]string{"nico", "jw"}
-	for _, person := range people {
-		// connect channel
-		go isNice(person, channel)
-	}
-	fmt.Println("Waiting for messages...")
-	// block main func until receive something from channel
-	results := []string{}
-	for i:=0; i<len(people); i++ {
-		results = append(results, <- channel)
+	results := make(map[string]string)
+	channel := make(chan requestResult)
+	urls := []string{
+		"https://www.airbnb.com/",
+		"https://www.google.com/",
+		"https://www.amazon.com/",
+		"https://www.reddit.com/",
+		"https://www.google.com/",
+		"https://soundcloud.com/",
+		"https://www.facebook.com/",
+		"https://www.instagram.com/",
+		"https://academy.nomadcoders.co/",
 	}
 
-	for idx := range results {
-		fmt.Println(results[idx])
+	for _, url := range urls {
+		go hitURL(url, channel)
+	}
+
+	for i:=0; i<len(urls); i++ {
+		result := <- channel
+		results[result.url] = fmt.Sprint(result.status)
+	}
+
+	for url, status := range results {
+		fmt.Println(url, status)
 	}
 }
 
-// connect channel
-func isNice(person string, channel chan string) {
-	time.Sleep(time.Second * 3)
-	// return(send) to main
-	channel <- person + " is nice"
+// send only
+func hitURL(url string, channel chan<- requestResult)  {
+	resp, err := http.Get(url)
+	if err != nil || resp.StatusCode >= 400 {
+		fmt.Println("ERROR❌", url, err, resp.StatusCode)
+	} 
+	channel <- requestResult{url: url, status: resp.StatusCode}
 }
