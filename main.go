@@ -22,40 +22,27 @@ var baseURL string = "https://kr.indeed.com/jobs?q=python&limit=50"
 
 func main() {
 	jobs := []extractedJob{}
+	// 여러 페이지에서 배열을 받아오기 떄문에
+	c := make(chan []extractedJob)
 	totalPages := getPages()
 
 	for i :=0; i<totalPages; i++ {
-		extractedJobs := getPage(i)
-		// ... means contents in array
+		go getPage(i, c)
+	}
+
+	for i := 0; i < totalPages; i++ {
+		extractedJobs := <- c
 		jobs = append(jobs, extractedJobs...)
 	}
+
 	writeJobs(jobs)
 	fmt.Println("Done, extracted: ", len(jobs))
 }
 
-// save jobs to csv file
-func writeJobs(jobs []extractedJob) {
-	file, err := os.Create("jobs.csv")
-	checkErr(err)
-
-	w := csv.NewWriter(file)
-	defer w.Flush()
-
-	headers := []string{"Link","Title","Location","Summary"}
-
-	wErr := w.Write(headers)
-	checkErr(wErr)
-
-	for _, job := range jobs {
-		jobSlice := []string{"https://kr.indeed.com/viewjob?jk="+job.id, job.title, job.location, job.summary}
-		jwErr := w.Write(jobSlice)
-		checkErr(jwErr)
-	}
-}
-
-func getPage(page int) []extractedJob{
+func getPage(page int, mainC chan<- []extractedJob) {
 	// 한 페이지에 해당하는 jobs array
 	jobs := []extractedJob{}
+	c := make(chan extractedJob)
 	pageURL := baseURL + "&start=" + fmt.Sprint(page*50)
 	fmt.Println(pageURL)
 	res, err := http.Get(pageURL)
@@ -70,18 +57,23 @@ func getPage(page int) []extractedJob{
 	searchCards := doc.Find(".jobsearch-SerpJobCard")
 
 	searchCards.Each(func(i int, card *goquery.Selection) {
-		job := extractJob(card)
-		jobs = append(jobs, job)
+		go extractJob(card, c)
 	})
-	return jobs
+
+	for i:=0; i < searchCards.Length(); i++ {
+		job := <-c
+		jobs = append(jobs, job)
+	}
+	
+	mainC <- jobs
 } 
 
-func extractJob (card *goquery.Selection) extractedJob {
+func extractJob (card *goquery.Selection, c chan<- extractedJob) {
 	id, _ := card.Attr("data-jk")
 	title := cleanString(card.Find(".title>a").Text())
 	location := cleanString(card.Find(".sjcl").Text())
 	summary := cleanString(card.Find(".summary").Text())
-	return extractedJob{
+	c <- extractedJob{
 		id:id,
 		title:title,
 		location:location,
@@ -107,6 +99,26 @@ func getPages() int {
 	})
 
 	return pages
+}
+
+// save jobs to csv file
+func writeJobs(jobs []extractedJob) {
+	file, err := os.Create("jobs.csv")
+	checkErr(err)
+
+	w := csv.NewWriter(file)
+	defer w.Flush()
+
+	headers := []string{"Link","Title","Location","Summary"}
+
+	wErr := w.Write(headers)
+	checkErr(wErr)
+
+	for _, job := range jobs {
+		jobSlice := []string{"https://kr.indeed.com/viewjob?jk="+job.id, job.title, job.location, job.summary}
+		jwErr := w.Write(jobSlice)
+		checkErr(jwErr)
+	}
 }
 
 func checkErr(err error) {
