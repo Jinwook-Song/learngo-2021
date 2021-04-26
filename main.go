@@ -1,18 +1,21 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
 
-type person struct {
-	name string
-	age int
-	favFood []string
-}
+	"github.com/jinwook-song/learngo-2021/accounts"
+)
 
 func main() {
-	favFood:= []string{"kimchi","ramen"}
-	nico:= person{
-		name:"nico",
-		age:29,
-		favFood: favFood}
-	fmt.Println(nico)
+	accounts := accounts.NewAccount("nico")
+	accounts.Deposit(10)
+	fmt.Println(accounts.Balacne())
+	// error handle
+	err := accounts.Withdraw(12)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println(accounts )
+	accounts.ChangeOwner("jinwook")
+	fmt.Println("changed owner:" ,accounts.Owner())
 }
