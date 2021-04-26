@@ -1,46 +1,33 @@
 package main
 
 import (
-	"errors"
 	"fmt"
-	"net/http"
+	"time"
 )
 
-var errRequestFailed = errors.New("request failed")
-
 func main() {
-	var results = make(map[string]string)
-	urls := []string{
-		"https://www.airbnb.com/",
-		"https://www.google.com/",
-		"https://www.amazon.com/",
-		"https://www.reddit.com/",
-		"https://www.google.com/",
-		"https://soundcloud.com/",
-		"https://www.facebook.com/",
-		"https://www.instagram.com/",
-		"https://academy.nomadcoders.co/",
+	// create channel
+	channel := make(chan string)
+	people := [2]string{"nico", "jw"}
+	for _, person := range people {
+		// connect channel
+		go isNice(person, channel)
 	}
-	for _, url := range urls {
-		result := "OK"
-		err := hitURL(url)
-		if err != nil {
-			result = "FAILED"
-		}
-		results[url] = result
+	fmt.Println("Waiting for messages...")
+	// block main func until receive something from channel
+	results := []string{}
+	for i:=0; i<len(people); i++ {
+		results = append(results, <- channel)
 	}
-	for url, result := range results {
-		fmt.Println(url, result)
+
+	for idx := range results {
+		fmt.Println(results[idx])
 	}
 }
 
-func hitURL(url string) error {
-	fmt.Println("Checking:", url)
-	resp, err := http.Get(url)
-	if err != nil || resp.StatusCode >= 400 {
-		fmt.Println(err, resp.StatusCode)
-		return errRequestFailed
-	}
-	return nil
-
+// connect channel
+func isNice(person string, channel chan string) {
+	time.Sleep(time.Second * 3)
+	// return(send) to main
+	channel <- person + " is nice"
 }
